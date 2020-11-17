@@ -1,0 +1,32 @@
+---
+name: "Label maintenance"
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  label_open_boards:
+    name: "Manage accepted label"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v2
+
+      - name: "Set up python"
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: "Install dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+          pipenv install
+
+      - name: "Manage cards"
+        run: |
+          pipenv run python label-cards-in-sprint.py -o CCI-MOC -v
+        env:
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
