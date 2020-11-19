@@ -14,3 +14,8 @@ closed board and are not *also* included in one or more open boards.
 The job runs every half hour via a [github action][action].
 
 [action]: .github/workflows/sprint-board-maintenance.yml
+
+### move-top-notes-to-top.py
+
+Ensure that important notes stay on top: move notes that start with `[top]` to
+the top of their respective column.

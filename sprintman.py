@@ -4,6 +4,16 @@ import logging
 from functools import wraps
 
 LOG = logging.getLogger(__name__)
+DEFAULT_ORG = 'CCI-MOC'
+DEFAULT_BACKLOG = 'mocbacklog'
+
+
+class ApplicationError(Exception):
+    pass
+
+
+class BoardNotFoundError(ApplicationError):
+    pass
 
 
 def cached(func):
@@ -21,9 +31,10 @@ def cached(func):
 
 
 class Sprintman(github.Github):
-    def __init__(self, token, org):
+    def __init__(self, token, org_name=None, backlog_name=None):
         super().__init__(token)
-        self._org_name = org
+        self._org_name = org_name if org_name else DEFAULT_ORG
+        self._backlog_name = backlog_name if backlog_name else DEFAULT_BACKLOG
 
     @property
     @cached
@@ -41,3 +52,13 @@ class Sprintman(github.Github):
         for board in self.organization.get_projects('closed'):
             if board.name.lower().startswith('sprint'):
                 yield board
+
+    @property
+    def backlog(self):
+        for board in self.organization.get_projects('open'):
+            if board.name.lower() == self._backlog_name.lower():
+                break
+        else:
+            raise BoardNotFoundError(self.backlog)
+
+        return board
