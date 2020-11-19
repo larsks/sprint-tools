@@ -59,6 +59,6 @@ class Sprintman(github.Github):
             if board.name.lower() == self._backlog_name.lower():
                 break
         else:
-            raise BoardNotFoundError(self.backlog)
+            raise BoardNotFoundError(self._backlog_name)
 
         return board
