@@ -12,7 +12,7 @@ maybe_unlabel = {}
 
 @click.command()
 @click.option('--verbose', '-v', type=int, count=True)
-@click.option('--organization', '-o', required=True)
+@click.option('--organization', '-o')
 def main(verbose, organization):
     try:
         loglevel = ['WARNING', 'INFO', 'DEBUG'][verbose]
@@ -22,7 +22,8 @@ def main(verbose, organization):
     logging.basicConfig(level=loglevel)
 
     try:
-        sm = Sprintman(os.environ.get('GH_API_TOKEN'), organization)
+        sm = Sprintman(os.environ.get('GH_API_TOKEN'),
+                       org_name=organization)
 
         for board in chain(sm.open_sprints, [sm.backlog]):
             for col in board.get_columns():

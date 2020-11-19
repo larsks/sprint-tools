@@ -48,7 +48,7 @@ def process_open_board(board):
 
 @click.command()
 @click.option('--verbose', '-v', type=int, count=True)
-@click.option('--organization', '-o', required=True)
+@click.option('--organization', '-o')
 def main(verbose, organization):
     try:
         loglevel = ['WARNING', 'INFO', 'DEBUG'][verbose]
@@ -58,7 +58,8 @@ def main(verbose, organization):
     logging.basicConfig(level=loglevel)
 
     try:
-        sm = Sprintman(os.environ.get('GH_API_TOKEN'), organization)
+        sm = Sprintman(os.environ.get('GH_API_TOKEN'),
+                       org_name=organization)
 
         for board in sm.closed_sprints:
             process_closed_board(board)
