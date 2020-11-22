@@ -31,8 +31,8 @@ jobs:
         env:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
-  move_top_notes:
-    name: "Move [top] notes to top"
+  sort_by_priority:
+    name: "Sort cards by priority in title"
     runs-on: ubuntu-latest
 
     steps:
@@ -50,9 +50,9 @@ jobs:
           pip install pipenv
           pipenv install
 
-      - name: "Move notes"
+      - name: "Sort cards"
         run: |
-          pipenv run python move-top-notes-to-top.py -v
+          pipenv run python sort-by-priority.py -v
         env:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
