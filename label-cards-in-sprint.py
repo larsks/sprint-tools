@@ -42,7 +42,7 @@ def process_open_board(board):
 
             if content.url in maybe_unlabel:
                 logging.info('found card "%s" on open board "%s"',
-                             card.name, board.name)
+                             content.title, board.name)
                 del maybe_unlabel[content.url]
 
 
