@@ -3,7 +3,7 @@ import github
 import logging
 import os
 
-from sprintman import Sprintman
+from moc_sprint_tools.sprintman import Sprintman
 
 maybe_unlabel = {}
 

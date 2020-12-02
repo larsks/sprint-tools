@@ -7,7 +7,7 @@ import re
 
 from itertools import chain
 
-from sprintman import Sprintman
+from moc_sprint_tools.sprintman import Sprintman
 
 LOG = logging.getLogger(__name__)
 
