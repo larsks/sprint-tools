@@ -7,7 +7,7 @@ on:
 
 jobs:
   label_open_boards:
-    name: "Manage accepted label"
+    name: "Sprint board maintenance"
     runs-on: ubuntu-latest
 
     steps:
@@ -25,58 +25,26 @@ jobs:
           pip install pipenv
           pipenv install -e .
 
-      - name: "Manage cards"
+      - name: "Manage accepted label"
         run: |
           pipenv run moc-sprint-tools -v label-cards-in-sprint
         env:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
-  sort_by_priority:
-    name: "Sort cards by priority in title"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v2
-
-      - name: "Set up python"
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install --upgrade pip
-          pip install pipenv
-          pipenv install -e .
-
-      - name: "Sort cards"
+      - name: "Sort priority tagged cards"
         run: |
           pipenv run moc-sprint-tools -v sort-cards-by-priority
         env:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
 
-  label_needs_description:
-    name: "Label cards that need a description"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v2
-
-      - name: "Set up python"
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: "Install dependencies"
-        run: |
-          python -m pip install --upgrade pip
-          pip install pipenv
-          pipenv install -e .
-
-      - name: "Label cards"
+      - name: "Add needs_description label"
         run: |
           pipenv run moc-sprint-tools -v label-needs-description
+        env:
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+
+      - name: "Add missing cards to backlog"
+        run: |
+          pipenv run moc-sprint-tools -v cards-missing-from-backlog
         env:
           GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
