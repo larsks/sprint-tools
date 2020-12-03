@@ -7,6 +7,8 @@ from moc_sprint_tools import defaults
 from moc_sprint_tools import label_cards_in_sprint
 from moc_sprint_tools import label_needs_description
 from moc_sprint_tools import sort_cards_by_priority
+from moc_sprint_tools import utils
+
 from moc_sprint_tools.sprintman import Sprintman
 
 
@@ -32,3 +34,5 @@ def main(ctx, verbose, organization):
 main.add_command(label_cards_in_sprint.main)
 main.add_command(label_needs_description.main)
 main.add_command(sort_cards_by_priority.main)
+main.add_command(utils.shell)
+main.add_command(utils.repos)
