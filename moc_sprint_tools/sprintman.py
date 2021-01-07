@@ -44,7 +44,7 @@ class Sprintman(github.Github):
     @property
     def open_sprints(self):
         for board in self.organization.get_projects('open'):
-            if board.name.lower().startswith('sprint'):
+            if board.name.lower().strip().startswith('sprint'):
                 yield board
 
     @property
