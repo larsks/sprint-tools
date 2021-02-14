@@ -1,3 +1,4 @@
+import bisect
 import click
 import datetime
 import github
@@ -21,7 +22,7 @@ def Date(val):
     if val in ['now', 'today']:
         date = datetime.date.today()
     else:
-        date = datetime.date.strptime(val, '%Y-%m-%d')
+        date = datetime.date.fromisoformat(val)
 
     if date is None:
         raise ValueError(val)
@@ -42,14 +43,43 @@ def dump_date_as_iso8601(val):
         return val
 
 
+def check_overlaps(api, date):
+    conflicts = []
+    sprints = []
+
+    for sprint in api.open_sprints:
+        try:
+            md = json.loads(sprint.body)
+        except (TypeError, json.decoder.JSONDecodeError):
+            continue
+
+        for attr in ['week1', 'week2']:
+            md[attr] = datetime.date.fromisoformat(md[attr])
+
+        sprints.append((md['week1'], md['week2'], sprint))
+
+        if md['week1'] < date < md['week2']:
+            conflicts.append(sprint)
+
+    try:
+        prev_week1, prev_week2, prev_board = sorted(sprints)[-1]
+        if prev_week1 >= date:
+            prev_board = None
+    except IndexError:
+        prev_board = None
+
+    return prev_board, conflicts
+
+
 @click.command(name='create-sprint-boards')
 @click.option('--copy-cards/--no-copy-cards', default=True)
 @click.option('--date', '-d', type=Date, default='now')
 @click.option('--templates', '-t')
 @click.option('--notes-repo', '-n', default=defaults.default_sprint_notes_repo)
+@click.option('--force', '-f', is_flag=True)
 @click.option('--check-only', '-n', is_flag=True)
 @click.pass_context
-def main(ctx, date, templates, notes_repo, copy_cards, check_only):
+def main(ctx, date, templates, notes_repo, copy_cards, force, check_only):
     api = ctx.obj
 
     loaders = []
@@ -64,7 +94,7 @@ def main(ctx, date, templates, notes_repo, copy_cards, check_only):
 
     try:
         week1 = date
-        week2 = date + datetime.timedelta(days=7)
+        week2 = date + datetime.timedelta(days=14)
 
         sprint_title = env.get_template('sprint_title.j2').render(
             week1=week1, week2=week2
@@ -85,6 +115,8 @@ def main(ctx, date, templates, notes_repo, copy_cards, check_only):
 
         repo = api.organization.get_repo(notes_repo)
 
+        # check if board exists
+
         try:
             api.get_sprint(sprint_title)
             LOG.warning('sprint board "%s" already exists.' % sprint_title)
@@ -97,6 +129,17 @@ def main(ctx, date, templates, notes_repo, copy_cards, check_only):
         if issue:
             LOG.info('using existing notes issue %s#%s',
                      issue.repository.full_name, issue.number)
+
+        # check for overlap with existing sprint
+
+        previous, conflicts = check_overlaps(api, week1)
+        if conflicts and not force:
+            titles = ', '.join(sprint.name for sprint in conflicts)
+            raise click.ClickException(
+                f'new sprint {sprint_title} overlaps with {titles}')
+
+        if previous:
+            LOG.info('found previous sprint %s', previous.name)
 
         if check_only:
             return
