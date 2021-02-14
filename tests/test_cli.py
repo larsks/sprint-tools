@@ -1,5 +1,4 @@
 import click.testing
-import datetime
 import pytest
 
 from unittest import mock
@@ -42,52 +41,3 @@ def test_boards(api, runner, projects):
     res = runner.invoke(moc_sprint_tools.cli.main, 'boards')
     assert res.exit_code == 0
     assert res.stdout == '\n'.join(project.name for project in projects) + '\n'
-
-
-@pytest.mark.skip(reason='refactoring create-sprint-boards')
-def test_create_sprint_boards_no_copy(api, org, runner, projects):
-    today = datetime.datetime.now()
-    today.replace(hour=0, minute=0, second=0)
-    api.get_sprint.side_effect = moc_sprint_tools.sprintman.BoardNotFoundError
-
-    with mock.patch('moc_sprint_tools.cmd.create_sprint_boards.load_sprint_data') as load_sprint_data:
-        load_sprint_data.return_value = [
-            ('Test Sprint', today)
-        ]
-
-        res = runner.invoke(moc_sprint_tools.cli.main, 'create-sprint-boards', '--no-copy-cards')
-        assert res.exit_code == 0
-        assert api.create_sprint.call_args_list[0][0] == ('Test Sprint',)
-
-
-@pytest.mark.skip(reason='refactoring create-sprint-boards')
-def test_create_sprint_boards_duplicate_no_copy(caplog, api, org, runner, projects):
-    today = datetime.datetime.now()
-    today.replace(hour=0, minute=0, second=0)
-    api.get_sprint.return_value = projects[0]
-
-    with mock.patch('moc_sprint_tools.cmd.create_sprint_boards.load_sprint_data') as load_sprint_data:
-        load_sprint_data.return_value = [
-            (projects[0].name, today)
-        ]
-
-        res = runner.invoke(moc_sprint_tools.cli.main, 'create-sprint-boards', '--no-copy-cards')
-        assert res.exit_code == 0
-        assert not api.create_sprint.call_args_list
-
-
-@pytest.mark.skip(reason='refactoring create-sprint-boards')
-def test_create_sprint_boards_copy(api, org, runner, projects):
-    today = datetime.datetime.now()
-    today.replace(hour=0, minute=0, second=0)
-    api.get_sprint.side_effect = moc_sprint_tools.sprintman.BoardNotFoundError
-
-    with mock.patch('moc_sprint_tools.cmd.create_sprint_boards.load_sprint_data') as load_sprint_data:
-        load_sprint_data.return_value = [
-            ('Test Sprint 1', today - datetime.timedelta(weeks=1)),
-            ('Test Sprint 2', today)
-        ]
-
-        res = runner.invoke(moc_sprint_tools.cli.main, 'create-sprint-boards')
-        assert res.exit_code == 0
-        assert api.create_sprint.call_args_list[0][0] == ('Test Sprint 2',)
