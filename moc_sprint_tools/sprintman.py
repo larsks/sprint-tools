@@ -1,7 +1,7 @@
 import github
 import logging
 
-from functools import wraps
+from functools import cached_property
 
 from moc_sprint_tools import defaults
 
@@ -18,28 +18,13 @@ class BoardNotFoundError(ApplicationError):
     pass
 
 
-def cached(func):
-    @wraps(func)
-    def wrapped(self, *args, **kwargs):
-        attr = f'_{func.__name__}'
-        if hasattr(self, attr):
-            return getattr(self, attr)
-
-        res = func(self, *args, **kwargs)
-        setattr(self, attr, res)
-        return res
-
-    return wrapped
-
-
 class Sprintman(github.Github):
     def __init__(self, token, org_name=None, backlog_name=None):
         super().__init__(token)
         self._org_name = org_name if org_name else DEFAULT_ORG
         self._backlog_name = backlog_name if backlog_name else DEFAULT_BACKLOG
 
-    @property
-    @cached
+    @cached_property
     def organization(self):
         return self.get_organization(self._org_name)
 
@@ -49,7 +34,6 @@ class Sprintman(github.Github):
             if board.name.lower().strip().startswith('sprint'):
                 yield board
 
-    @cached
     def get_sprint(self, name):
         for board in self.open_sprints:
             if board.name.lower() == name.lower():
