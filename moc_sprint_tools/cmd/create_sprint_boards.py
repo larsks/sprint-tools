@@ -39,8 +39,9 @@ def find_notes_issue(repo, title):
 @click.option('--date', '-d', type=Date, default='now')
 @click.option('--templates', '-t')
 @click.option('--notes-repo', '-n', default=defaults.default_sprint_notes_repo)
+@click.option('--check-only', '-n', is_flag=True)
 @click.pass_context
-def main(ctx, date, templates, notes_repo, copy_cards):
+def main(ctx, date, templates, notes_repo, copy_cards, check_only):
     api = ctx.obj
 
     loaders = []
@@ -86,6 +87,13 @@ def main(ctx, date, templates, notes_repo, copy_cards):
         issue = find_notes_issue(repo, sprint_notes_title)
         if issue:
             LOG.info('using existing notes issue')
+
+        if check_only:
+            return
+
+        ##
+        ## create resources after this point
+        ##
 
         # create project board
 
