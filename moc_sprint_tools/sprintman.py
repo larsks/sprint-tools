@@ -6,8 +6,6 @@ from functools import cached_property
 from moc_sprint_tools import defaults
 
 LOG = logging.getLogger(__name__)
-DEFAULT_ORG = 'CCI-MOC'
-DEFAULT_BACKLOG = 'mocbacklog'
 
 
 class ApplicationError(Exception):
@@ -21,8 +19,8 @@ class BoardNotFoundError(ApplicationError):
 class Sprintman(github.Github):
     def __init__(self, token, org_name=None, backlog_name=None):
         super().__init__(token)
-        self._org_name = org_name if org_name else DEFAULT_ORG
-        self._backlog_name = backlog_name if backlog_name else DEFAULT_BACKLOG
+        self._org_name = org_name if org_name else defaults.default_organization
+        self._backlog_name = backlog_name if backlog_name else defaults.default_backlog
 
     @cached_property
     def organization(self):
