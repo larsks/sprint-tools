@@ -12,6 +12,12 @@ LOG = logging.getLogger(__name__)
 
 
 def Date(val):
+    '''transform date on the command line into a datetime.date object
+
+    the values 'now' and 'today' both evaluate to the current day
+    (datetime.date.today()).
+    '''
+
     if val in ['now', 'today']:
         date = datetime.date.today()
     else:
@@ -24,12 +30,16 @@ def Date(val):
 
 
 def find_notes_issue(repo, title):
+    '''find an issue by title in the specified repository'''
+
     for issue in repo.get_issues(state='open'):
         if issue.title == title:
             return issue
 
 
 def dump_date_as_iso8601(val):
+    '''used to serialize datetime.date objects to JSON'''
+
     if isinstance(val, datetime.date):
         return val.isoformat()
     else:
@@ -37,6 +47,14 @@ def dump_date_as_iso8601(val):
 
 
 def check_overlaps(api, date):
+    '''look for existing sprints that conflict with the current date
+
+    since this function has to iterate through all existing sprint boards,
+    it also calculates the immediately prior sprint.
+
+    returns a (previous_board, list_of_conflicts) tuple to the caller.
+    '''
+
     conflicts = []
     sprints = []
 
@@ -73,6 +91,15 @@ def check_overlaps(api, date):
 @click.option('--check-only', '-n', is_flag=True)
 @click.pass_context
 def main(ctx, date, templates, notes_repo, copy_cards, force, check_only):
+    '''create sprint board for the current date
+
+    create a new project board for a sprint beginning on the current date (or
+    on the argument to --date, if provided). create-sprint-board will not
+    create a sprint board if one with the same name already exists. It will not
+    create a sprint board if the dates overlap with an existing open sprint
+    unless you provide the --force option.
+    '''
+
     api = ctx.obj
 
     loaders = []
