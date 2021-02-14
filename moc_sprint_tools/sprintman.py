@@ -59,12 +59,12 @@ class Sprintman(github.Github):
             if c.name.lower() == name.lower():
                 return c
 
-    def create_sprint(self, name):
-        board = self.organization.create_project(name)
+    def create_sprint(self, name, body=None):
+        board = self.organization.create_project(name, body=body)
         board.edit(private=False)
-        LOG.info('Created board %s' % board.name)
 
         for column in defaults.default_sprint_columns:
+            LOG.debug('adding column %s in board %s', column, name)
             board.create_column(column)
 
         return board

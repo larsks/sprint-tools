@@ -1,10 +1,11 @@
 import click
-import csv
 import datetime
 import github
+import jinja2
 import logging
 
 from moc_sprint_tools.sprintman import BoardNotFoundError
+from moc_sprint_tools import defaults
 
 LOG = logging.getLogger(__name__)
 
@@ -15,50 +16,59 @@ CARD_COPYING_MAP = {
 }
 
 
-def load_sprint_data(input_file):
-    sprints = []
-    with open(input_file) as f:
-        reader = csv.reader(f)
-        next(f)
-        for row in reader:
-            sprints.append(
-                [row[0], datetime.datetime.strptime(row[1], '%Y-%m-%d')])
-    return sprints
+def Date(val):
+    if val == 'now':
+        date = datetime.datetime.now()
+    else:
+        date = datetime.datetime.strptime(val, '%Y-%m-%d')
+
+    if date is None:
+        raise ValueError(val)
+
+    return date
 
 
 @click.command(name='create-sprint-boards')
-@click.option('--file', '-f', type=str, default='./config/sprint_dates.csv')
 @click.option('--copy-cards/--no-copy-cards', default=True)
+@click.option('--date', '-d', type=Date, default='now')
+@click.option('--templates', '-t')
 @click.pass_context
-def main(ctx, file, copy_cards):
+def main(ctx, date, templates, copy_cards):
     api = ctx.obj
 
+    loaders = []
+    if templates:
+        loaders.append(jinja2.FileSystemLoader(templates))
+    loaders.append(jinja2.PackageLoader('moc_sprint_tools'))
+
+    env = jinja2.Environment(
+        loader=jinja2.ChoiceLoader(loaders),
+    )
+    env.globals['api'] = api
+
     try:
-        sprints = load_sprint_data(file)
-        current_sprint = None
-        previous_sprint = None
-        today = datetime.datetime.utcnow()
+        week1 = date
+        week2 = date + datetime.timedelta(days=7)
 
-        for line, sprint in enumerate(sprints):
-            if today > sprint[1]:
-                current_sprint = sprint
+        sprint_title = env.get_template('sprint_title.j2').render(
+            week1=week1, week2=week2
+        )
 
-                if line > 0:
-                    previous_sprint = sprints[line - 1]
-            else:
-                break
-
-        if not current_sprint:
-            LOG.warning('No sprint is current')
-            return
+        sprint_description = env.get_template('sprint_description.j2').render(
+            week1=week1, week2=week2
+        )
 
         try:
-            api.get_sprint(current_sprint[0])
-            LOG.warning('Sprint board "%s" already exists.' % current_sprint[0])
+            api.get_sprint(sprint_title)
+            LOG.warning('Sprint board "%s" already exists.' % sprint_title)
             return
         except BoardNotFoundError:
-            board = api.create_sprint(current_sprint[0])
+            pass
 
+        # create project board
+
+        LOG.info('creating board %s', sprint_title)
+        board = api.create_sprint(sprint_title, body=sprint_description)
 
     except github.GithubException as err:
         raise click.ClickException(err)
