@@ -26,12 +26,6 @@ def load_sprint_data(input_file):
     return sprints
 
 
-def get_column(board, name):
-    for c in board.get_columns():
-        if c.name.lower() == name.lower():
-            return c
-
-
 def copy_card(source_card, destination_column):
     content = source_card.get_content()
     if content:
@@ -52,13 +46,14 @@ def copy_card(source_card, destination_column):
         destination_column.create_card(note=source_card.note)
 
 
-def copy_board(source_board, destination_board):
+def copy_board(api, source_board, destination_board):
     for source in source_board.get_columns():
         destination = CARD_COPYING_MAP.get(source.name.lower(), None)
         if not destination:
             continue
 
-        destination = get_column(destination_board, destination)
+        # XXX: what if this fails?
+        destination = api.get_column(destination_board, destination)
         cards = list(source.get_cards())
         cards.reverse()  # Creating a card adds it to the top
 
@@ -101,7 +96,7 @@ def main(ctx, file, copy_cards):
 
             if previous_sprint and copy_cards:
                 previous_board = api.get_sprint(previous_sprint[0])
-                copy_board(previous_board, board)
+                copy_board(api, previous_board, board)
 
     except github.GithubException as err:
         raise click.ClickException(err)

@@ -56,6 +56,11 @@ class Sprintman(github.Github):
 
         return board
 
+    def get_column(self, board, name):
+        for c in board.get_columns():
+            if c.name.lower() == name.lower():
+                return c
+
     def create_sprint(self, name):
         board = self.organization.create_project(name)
         board.edit(private=False)
