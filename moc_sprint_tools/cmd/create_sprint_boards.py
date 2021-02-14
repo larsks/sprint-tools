@@ -94,7 +94,7 @@ def main(ctx, file, copy_cards):
 
         try:
             api.get_sprint(current_sprint[0])
-            LOG.debug('Sprint board "%s" already exists.' % current_sprint[0])
+            LOG.warning('Sprint board "%s" already exists.' % current_sprint[0])
             return
         except BoardNotFoundError:
             board = api.create_sprint(current_sprint[0])
