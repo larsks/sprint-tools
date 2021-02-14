@@ -28,6 +28,12 @@ def Date(val):
     return date
 
 
+def find_notes_issue(repo, title):
+    for issue in repo.get_issues(state='open'):
+        if issue.title == title:
+            return issue
+
+
 @click.command(name='create-sprint-boards')
 @click.option('--copy-cards/--no-copy-cards', default=True)
 @click.option('--date', '-d', type=Date, default='now')
@@ -76,6 +82,11 @@ def main(ctx, date, templates, notes_repo, copy_cards):
         except BoardNotFoundError:
             pass
 
+        #  check for existing notes issue
+        issue = find_notes_issue(repo, sprint_notes_title)
+        if issue:
+            LOG.info('using existing notes issue')
+
         # create project board
 
         LOG.info('creating board %s', sprint_title)
@@ -83,9 +94,10 @@ def main(ctx, date, templates, notes_repo, copy_cards):
 
         # create sprint notes issue
 
-        LOG.info('creating sprint notes issue in %s', notes_repo)
-        issue = repo.create_issue(title=sprint_notes_title,
-                                  body=sprint_notes_description)
+        if not issue:
+            LOG.info('creating sprint notes issue in %s', notes_repo)
+            issue = repo.create_issue(title=sprint_notes_title,
+                                      body=sprint_notes_description)
 
         # add sprint note to card in notes column
 
