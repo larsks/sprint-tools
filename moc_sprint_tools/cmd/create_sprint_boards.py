@@ -6,6 +6,7 @@ import json
 import logging
 
 from moc_sprint_tools.sprintman import BoardNotFoundError
+from moc_sprint_tools import defaults
 
 LOG = logging.getLogger(__name__)
 
@@ -20,6 +21,12 @@ def Date(val):
         raise ValueError(val)
 
     return date
+
+
+def find_notes_issue(repo, title):
+    for issue in repo.get_issues(state='open'):
+        if issue.title == title:
+            return issue
 
 
 def dump_date_as_iso8601(val):
@@ -63,8 +70,9 @@ def check_overlaps(api, date):
 @click.option('--templates', '-t')
 @click.option('--force', '-f', is_flag=True)
 @click.option('--check-only', '-n', is_flag=True)
+@click.option('--notes-repo', '-N', default=defaults.default_sprint_notes_repo)
 @click.pass_context
-def main(ctx, date, templates, copy_cards, force, check_only):
+def main(ctx, date, templates, force, check_only, notes_repo, copy_cards):
     api = ctx.obj
 
     loaders = []
@@ -92,12 +100,27 @@ def main(ctx, date, templates, copy_cards, force, check_only):
 
         # check if board exists
 
+        sprint_notes_title = env.get_template('sprint_notes_title.j2').render(
+            week1=week1, week2=week2
+        )
+
+        sprint_notes_description = env.get_template('sprint_notes_description.j2').render(
+            week1=week1, week2=week2
+        )
+
+        repo = api.organization.get_repo(notes_repo)
+
         try:
             api.get_sprint(sprint_title)
             LOG.warning('sprint board "%s" already exists.' % sprint_title)
             return
         except BoardNotFoundError:
             LOG.info('preparing to create sprint board "%s"' % sprint_title)
+
+        #  check for existing notes issue
+        issue = find_notes_issue(repo, sprint_notes_title)
+        if issue:
+            LOG.info('using existing notes issue')
 
         # check for overlap with existing sprint
 
@@ -123,6 +146,22 @@ def main(ctx, date, templates, copy_cards, force, check_only):
 
         LOG.info('creating board %s', sprint_title)
         board = api.create_sprint(sprint_title, body=sprint_description)
+
+        # create sprint notes issue
+
+        if not issue:
+            LOG.info('creating sprint notes issue in %s', notes_repo)
+            issue = repo.create_issue(title=sprint_notes_title,
+                                      body=sprint_notes_description)
+
+        # add sprint note to card in notes column
+
+        LOG.info('creating sprint notes card')
+        notes = api.get_column(board, 'notes')
+        notes.create_card(
+            content_id=issue.id,
+            content_type='Issue',
+        )
 
         # copy cards if requested
         if copy_cards and previous:
