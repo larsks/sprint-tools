@@ -14,7 +14,7 @@ class CardWrapper:
 
     def __repr__(self):
         title = self.title.splitlines()[0][:40].strip()
-        return f'<title="{title!r}" priority={self.priority} id={self.id}>'
+        return f'<title="{title}" priority={self.priority} id={self.id}>'
 
     def __lt__(self, other):
         if self.priority is None:
@@ -52,7 +52,7 @@ class CardWrapper:
 
     @title.setter
     def title(self, title):
-        self.set_title_and_priority(self.priority, title)
+        self.set_priority_and_title(self.priority, title)
 
     @property
     def priority(self):
@@ -62,7 +62,7 @@ class CardWrapper:
 
     @priority.setter
     def priority(self, priority):
-        self.set_priority_and_title(self, priority, self.title)
+        self.set_priority_and_title(priority, self.title)
 
     def set_priority_and_title(self, priority, title):
         self._raw_title = title_format.render(
