@@ -1,4 +1,3 @@
-import bisect
 import click
 import datetime
 import github
@@ -10,12 +9,6 @@ from moc_sprint_tools.sprintman import BoardNotFoundError
 from moc_sprint_tools import defaults
 
 LOG = logging.getLogger(__name__)
-
-CARD_COPYING_MAP = {
-    'notes': 'notes',
-    'sprint backlog': 'sprint backlog',
-    'in progress': 'in progress'
-}
 
 
 def Date(val):
@@ -133,6 +126,8 @@ def main(ctx, date, templates, notes_repo, copy_cards, force, check_only):
         # check for overlap with existing sprint
 
         previous, conflicts = check_overlaps(api, week1)
+        LOG.debug('found previous board: %s', previous)
+        LOG.debug('found conflicts: %s', conflicts)
         if conflicts and not force:
             titles = ', '.join(sprint.name for sprint in conflicts)
             raise click.ClickException(
@@ -168,6 +163,11 @@ def main(ctx, date, templates, notes_repo, copy_cards, force, check_only):
             content_id=issue.id,
             content_type='Issue',
         )
+
+        # copy cards if requested
+        if copy_cards and previous:
+            LOG.info('copying cards from {previous.name}')
+            api.copy_board(previous, board)
 
     except github.GithubException as err:
         raise click.ClickException(err)
