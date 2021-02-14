@@ -44,6 +44,7 @@ def test_boards(api, runner, projects):
     assert res.stdout == '\n'.join(project.name for project in projects) + '\n'
 
 
+@pytest.mark.skip(reason='refactoring create-sprint-boards')
 def test_create_sprint_boards_no_copy(api, org, runner, projects):
     today = datetime.datetime.now()
     today.replace(hour=0, minute=0, second=0)
@@ -59,6 +60,7 @@ def test_create_sprint_boards_no_copy(api, org, runner, projects):
         assert api.create_sprint.call_args_list[0][0] == ('Test Sprint',)
 
 
+@pytest.mark.skip(reason='refactoring create-sprint-boards')
 def test_create_sprint_boards_duplicate_no_copy(caplog, api, org, runner, projects):
     today = datetime.datetime.now()
     today.replace(hour=0, minute=0, second=0)
@@ -74,7 +76,7 @@ def test_create_sprint_boards_duplicate_no_copy(caplog, api, org, runner, projec
         assert not api.create_sprint.call_args_list
 
 
-@pytest.mark.skip(reason='create-sprint-boards needs work')
+@pytest.mark.skip(reason='refactoring create-sprint-boards')
 def test_create_sprint_boards_copy(api, org, runner, projects):
     today = datetime.datetime.now()
     today.replace(hour=0, minute=0, second=0)

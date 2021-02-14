@@ -26,41 +26,6 @@ def load_sprint_data(input_file):
     return sprints
 
 
-def copy_card(source_card, destination_column):
-    content = source_card.get_content()
-    if content:
-        if isinstance(content, github.Issue.Issue):
-            content_type = 'Issue'
-        elif isinstance(content, github.PullRequest.PullRequest):
-            content_type = 'PullRequest'
-        else:
-            LOG.warning('Couldn\'t copy card with unkown type')
-            return
-
-        LOG.info('adding card "%s" to %s', content.title, destination_column.name)
-        destination_column.create_card(
-            content_id=content.id,
-            content_type=content_type,
-        )
-    else:
-        destination_column.create_card(note=source_card.note)
-
-
-def copy_board(api, source_board, destination_board):
-    for source in source_board.get_columns():
-        destination = CARD_COPYING_MAP.get(source.name.lower(), None)
-        if not destination:
-            continue
-
-        # XXX: what if this fails?
-        destination = api.get_column(destination_board, destination)
-        cards = list(source.get_cards())
-        cards.reverse()  # Creating a card adds it to the top
-
-        for card in cards:
-            copy_card(card, destination)
-
-
 @click.command(name='create-sprint-boards')
 @click.option('--file', '-f', type=str, default='./config/sprint_dates.csv')
 @click.option('--copy-cards/--no-copy-cards', default=True)
@@ -94,9 +59,6 @@ def main(ctx, file, copy_cards):
         except BoardNotFoundError:
             board = api.create_sprint(current_sprint[0])
 
-            if previous_sprint and copy_cards:
-                previous_board = api.get_sprint(previous_sprint[0])
-                copy_board(api, previous_board, board)
 
     except github.GithubException as err:
         raise click.ClickException(err)
