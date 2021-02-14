@@ -2,6 +2,7 @@ import click
 import datetime
 import github
 import jinja2
+import json
 import logging
 
 from moc_sprint_tools.sprintman import BoardNotFoundError
@@ -17,10 +18,10 @@ CARD_COPYING_MAP = {
 
 
 def Date(val):
-    if val == 'now':
-        date = datetime.datetime.now()
+    if val in ['now', 'today']:
+        date = datetime.date.today()
     else:
-        date = datetime.datetime.strptime(val, '%Y-%m-%d')
+        date = datetime.date.strptime(val, '%Y-%m-%d')
 
     if date is None:
         raise ValueError(val)
@@ -32,6 +33,13 @@ def find_notes_issue(repo, title):
     for issue in repo.get_issues(state='open'):
         if issue.title == title:
             return issue
+
+
+def dump_date_as_iso8601(val):
+    if isinstance(val, datetime.date):
+        return val.isoformat()
+    else:
+        return val
 
 
 @click.command(name='create-sprint-boards')
@@ -62,9 +70,10 @@ def main(ctx, date, templates, notes_repo, copy_cards, check_only):
             week1=week1, week2=week2
         )
 
-        sprint_description = env.get_template('sprint_description.j2').render(
-            week1=week1, week2=week2
-        )
+        sprint_description = json.dumps(dict(
+            week1=week1,
+            week2=week2
+        ), default=dump_date_as_iso8601)
 
         sprint_notes_title = env.get_template('sprint_notes_title.j2').render(
             week1=week1, week2=week2
