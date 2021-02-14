@@ -32,8 +32,9 @@ def Date(val):
 @click.option('--copy-cards/--no-copy-cards', default=True)
 @click.option('--date', '-d', type=Date, default='now')
 @click.option('--templates', '-t')
+@click.option('--notes-repo', '-n', default=defaults.default_sprint_notes_repo)
 @click.pass_context
-def main(ctx, date, templates, copy_cards):
+def main(ctx, date, templates, notes_repo, copy_cards):
     api = ctx.obj
 
     loaders = []
@@ -58,6 +59,16 @@ def main(ctx, date, templates, copy_cards):
             week1=week1, week2=week2
         )
 
+        sprint_notes_title = env.get_template('sprint_notes_title.j2').render(
+            week1=week1, week2=week2
+        )
+
+        sprint_notes_description = env.get_template('sprint_notes_description.j2').render(
+            week1=week1, week2=week2
+        )
+
+        repo = api.organization.get_repo(notes_repo)
+
         try:
             api.get_sprint(sprint_title)
             LOG.warning('Sprint board "%s" already exists.' % sprint_title)
@@ -69,6 +80,21 @@ def main(ctx, date, templates, copy_cards):
 
         LOG.info('creating board %s', sprint_title)
         board = api.create_sprint(sprint_title, body=sprint_description)
+
+        # create sprint notes issue
+
+        LOG.info('creating sprint notes issue in %s', notes_repo)
+        issue = repo.create_issue(title=sprint_notes_title,
+                                  body=sprint_notes_description)
+
+        # add sprint note to card in notes column
+
+        LOG.info('creating sprint notes card')
+        notes = api.get_column(board, 'notes')
+        notes.create_card(
+            content_id=issue.id,
+            content_type='Issue',
+        )
 
     except github.GithubException as err:
         raise click.ClickException(err)
