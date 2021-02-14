@@ -78,15 +78,16 @@ def main(ctx, date, templates, notes_repo, copy_cards, check_only):
 
         try:
             api.get_sprint(sprint_title)
-            LOG.warning('Sprint board "%s" already exists.' % sprint_title)
+            LOG.warning('sprint board "%s" already exists.' % sprint_title)
             return
         except BoardNotFoundError:
-            pass
+            LOG.info('preparing to create sprint board "%s"' % sprint_title)
 
         #  check for existing notes issue
         issue = find_notes_issue(repo, sprint_notes_title)
         if issue:
-            LOG.info('using existing notes issue')
+            LOG.info('using existing notes issue %s#%s',
+                     issue.repository.full_name, issue.number)
 
         if check_only:
             return
