@@ -77,8 +77,9 @@ def main(ctx, file, copy_cards):
         sprints = load_sprint_data(file)
         current_sprint = None
         previous_sprint = None
+        today = datetime.datetime.utcnow()
+
         for line, sprint in enumerate(sprints):
-            today = datetime.datetime.utcnow()
             if today > sprint[1]:
                 current_sprint = sprint
 
