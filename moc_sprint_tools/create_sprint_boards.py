@@ -10,7 +10,7 @@ LOG = logging.getLogger(__name__)
 
 CARD_COPYING_MAP = {
     'notes': 'notes',
-    'backlog': 'backlog',
+    'sprint backlog': 'sprint backlog',
     'in progress': 'in progress'
 }
 
