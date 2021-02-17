@@ -195,6 +195,8 @@ def main(ctx, date, templates, notes_repo, copy_cards, force, check_only):
         if copy_cards and previous:
             LOG.info('copying cards from {previous.name}')
             api.copy_board(previous, board)
+        elif copy_cards:
+            LOG.warning('not copying cards (no previous board)')
 
     except github.GithubException as err:
         raise click.ClickException(err)
