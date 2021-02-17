@@ -43,8 +43,7 @@ def copy_card(source_card, destination_column):
             LOG.warning('Couldn\'t copy card with unkown type')
             return
 
-        LOG.info('adding card "%s" to %s', (content.title,
-                                            destination_column.name))
+        LOG.info('adding card "%s" to %s', content.title, destination_column.name)
         destination_column.create_card(
             content_id=content.id,
             content_type=content_type,
