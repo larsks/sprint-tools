@@ -85,6 +85,7 @@ def main(ctx, file, copy_cards):
 
                 if line > 0:
                     previous_sprint = sprints[line - 1]
+            else:
                 break
 
         if not current_sprint:
