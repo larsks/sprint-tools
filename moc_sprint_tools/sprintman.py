@@ -61,12 +61,12 @@ class Sprintman(github.Github):
             if c.name.lower() == name.lower():
                 return c
 
-    def create_sprint(self, name):
-        board = self.organization.create_project(name)
+    def create_sprint(self, name, body=None):
+        board = self.organization.create_project(name, body=body)
         board.edit(private=False)
-        LOG.info('Created board %s' % board.name)
 
         for column in defaults.default_sprint_columns:
+            LOG.debug('adding column %s in board %s', column, name)
             board.create_column(column)
 
         return board
@@ -74,26 +74,31 @@ class Sprintman(github.Github):
     def copy_card(self, source_card, destination_column):
         content = source_card.get_content()
 
-        if content:
-            if isinstance(content, github.Issue.Issue):
-                content_type = 'Issue'
-            elif isinstance(content, github.PullRequest.PullRequest):
-                content_type = 'PullRequest'
-            else:
-                LOG.warning("couldn't copy card %s with unkown type", source_card)
-                return
+        try:
+            if content:
+                if isinstance(content, github.Issue.Issue):
+                    content_type = 'Issue'
+                elif isinstance(content, github.PullRequest.PullRequest):
+                    content_type = 'PullRequest'
+                else:
+                    LOG.warning("couldn't copy card %s with unkown type", source_card)
+                    return
 
-            LOG.info('adding card "%s" to column %s',
-                     content.title,
-                     destination_column.name)
-            destination_column.create_card(
-                content_id=content.id,
-                content_type=content_type,
-            )
-        elif source_card.note:
-            destination_column.create_card(note=source_card.note)
-        else:
-            raise ValueError(f'card {source_card.id} has no content')
+                LOG.info('adding card "%s" to column %s',
+                         content.title,
+                         destination_column.name)
+                destination_column.create_card(
+                    content_id=content.id,
+                    content_type=content_type,
+                )
+            elif source_card.note:
+                destination_column.create_card(note=source_card.note)
+            else:
+                raise ValueError(f'card {source_card.id} has no content')
+        except github.GithubException as err:
+            # XXX: we can make the error display nicer by parsing out the
+            # content of err.data['errors'].
+            LOG.warning('failed to copy card %s: %s', source_card, err)
 
     def copy_board(self, source_board, destination_board,
                    columns=None, ignore_columns=None):
