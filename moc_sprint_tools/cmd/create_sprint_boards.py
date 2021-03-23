@@ -129,6 +129,11 @@ def main(ctx, date, templates, force, check_only, notes_repo, copy_cards):
             week2=week2
         ), default=dump_date_as_iso8601)
 
+        LOG.debug('got week1: %s | %s | %s', week1, week1.isocalendar(), week1.isocalendar().week)
+        LOG.debug('got week2: %s | %s | %s', week2, week2.isocalendar(), week2.isocalendar().week)
+        LOG.debug('got title: %s', sprint_title)
+        LOG.debug('got description: %s', sprint_description)
+
         # check if board exists
 
         sprint_notes_title = env.get_template('sprint_notes_title.j2').render(
