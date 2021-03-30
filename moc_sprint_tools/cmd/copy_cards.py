@@ -1,9 +1,7 @@
 import click
-import github
 import logging
 
 from moc_sprint_tools.sprintman import sort_sprints, BoardNotFoundError
-from moc_sprint_tools import defaults
 
 LOG = logging.getLogger(__name__)
 
