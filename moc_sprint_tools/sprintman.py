@@ -1,4 +1,6 @@
+import datetime
 import github
+import json
 import logging
 
 from functools import cached_property
@@ -16,6 +18,19 @@ class ApplicationError(Exception):
 
 class BoardNotFoundError(ApplicationError):
     pass
+
+
+# XXX: there should probably be some error handling inside
+# the sort_key helper, but the failure mode with the current code
+# is "raise an exception" rather than "do the wrong thing".
+def sort_sprints(sprints):
+    '''return sprints sorted by start date'''
+
+    def sort_key(sprint):
+        return datetime.date.fromisoformat(
+            json.loads(sprint.body)['week1'])
+
+    return sorted(sprints, key=sort_key)
 
 
 class Sprintman(github.Github):
