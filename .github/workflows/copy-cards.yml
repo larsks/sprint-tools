@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  copy_cards::
+  copy_cards:
     name: "Copy cards"
     runs-on: ubuntu-latest
 

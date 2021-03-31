@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  create_sprint_board::
+  create_sprint_board:
     name: "Create sprint board"
     runs-on: ubuntu-latest
 
